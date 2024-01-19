@@ -1,0 +1,9 @@
+# Ignorar las carpetas y archivos en el nivel superior
+/public
+/pruebas
+/src
+/.env
+/tsconfig.json
+
+# Incluir la carpeta src dentro de dist
+!/dist/templates/static-files/**/
