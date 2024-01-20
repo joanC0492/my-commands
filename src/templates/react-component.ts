@@ -1,18 +1,23 @@
 export const generateComponentTemplate = (componentName: string) => {
   return `
-export const ${componentName} = () => {
+interface IProps {
+  className?: string;
+}
+
+export const ${componentName} = ({ className = "" }: IProps) => {
   return (
-    <div>
-      <h1>${componentName}</h1>
+    <div className={\`\${className}\`}>      
+      <p className="text-2xl">${componentName}</p>
       <p>Este es un componente de React generado personalizado.</p>
       <ul>
-      {[...new Array(20)].map((_, index) => (
-        <li key={index}>{index + 1}</li>
-      ))}
+        {[...new Array(20)].map((_, index) => (
+          <li key={index}>{index + 1}</li>
+        ))}
       </ul>
     </div>
   );
 };
+// export { ${componentName} } from "./${componentName}";
 // import { ${componentName} } from "@/";
 `;
 };
