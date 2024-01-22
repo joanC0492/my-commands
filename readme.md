@@ -32,3 +32,9 @@ npm publish
 
 # Creamos archivo .npmignore para indicar que archivos ignorar al subir a npm
 .npmignore
+
+
+
+#
+npm install commander
+

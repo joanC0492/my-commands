@@ -6,7 +6,7 @@ import fs from "fs";
 import path from "path";
 import yargs from "yargs";
 import { exec } from "child_process";
-import { generateComponentTemplate } from "./templates/react-component";
+import { generateComponentTemplate } from "./templates/react-template";
 
 /*UBICACION DE LOS TEMPLATES*/
 const TEMPLATE: string = path.join(__dirname, "templates/static-files");
