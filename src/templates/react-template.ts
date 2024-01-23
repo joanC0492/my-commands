@@ -22,8 +22,7 @@ export const ${componentName}:React.FC<IProps> = ({ className = "" }) => {
   );
 };
 // export { ${componentName} } from "./${componentName}";
-// import { ${componentName} } from "@/";
-`;
+// import { ${componentName} } from "@/";`;
 };
 
 export const generateInterfaceTemplate = (interfaceName: string) => {
@@ -35,6 +34,5 @@ export const generateInterfaceTemplate = (interfaceName: string) => {
 export interface ${newInterfaceName} {
   className?: string;
 }
-// export type { ${newInterfaceName} } from "./${interfaceName}.interface";
-`;
+// export type { ${newInterfaceName} } from "./${interfaceName}.interface";`;
 };

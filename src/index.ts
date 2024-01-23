@@ -54,8 +54,15 @@ const openVSCode = (filePath: string): void => {
 
 /**/
 const generateReactComponent = (DirAndComponent: string): void => {
-  const componentName = DirAndComponent.split("/").reverse()[0];
-  const dir = DirAndComponent.replace(componentName, "");
+  let componentName: string = DirAndComponent.split("/").reverse()[0];
+  let dir: string = DirAndComponent.replace(componentName, "");
+  let lastComponentArgument: string = componentName;
+
+  // Si termina en "/" ignoramos la posicion 0 y usar posicion 1
+  if (componentName === "") {
+    componentName = "index";
+    lastComponentArgument = DirAndComponent.split("/").reverse()[1];
+  }
 
   // Generar el archivo del componente
   const componentFileName = `${componentName}.tsx`;
@@ -68,7 +75,8 @@ const generateReactComponent = (DirAndComponent: string): void => {
   componentFilePath = path.join(componentFilePath, componentFileName);
 
   // Obtenemos el string del template react
-  const componentContent = generateComponentTemplate(componentName as string);
+  // const componentContent = generateComponentTemplate(componentName as string);
+  const componentContent = generateComponentTemplate(lastComponentArgument);
 
   // Escribir el contenido del componente en el archivo
   fs.writeFileSync(componentFilePath, componentContent, "utf-8");
