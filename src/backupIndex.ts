@@ -123,7 +123,9 @@ const generateReactInterface = (DirAndInterface: string): void => {
 enum DIRS {
   viteTailwind = "vite-tailwind",
   expressApi = "express-api",
+  joanCochachi = 220,
 }
+// type typeDIRS = Record<DIRS, string>;
 
 yargs
   .command(
@@ -149,8 +151,15 @@ yargs
   .command(
     "vite init",
     "Creamos el espacio de trabajo para un proyecto react con Vite",
-    {},
-    () => {
+    (yargs: Argv) => {
+      yargs.option("tw", {
+        alias: "t",
+        describe: "Archivo a copiar",
+        default: "src/templates/static-files/tailwind.config.js",
+        type: "string",
+      });
+    },
+    (argv) => {
       initIntervaL("Iniciando proyecto vite con react...");
 
       // Obtener la ruta actual

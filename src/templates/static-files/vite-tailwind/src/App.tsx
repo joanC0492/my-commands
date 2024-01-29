@@ -1,6 +1,6 @@
 export const App = () => {
   return (
-    <main>
+    <main className="min-h-screen bg-jc-primary text-white">
       <div className="container">
         <div className="grid grid-cols-12 gap-4">
           <div className="col-span-12">

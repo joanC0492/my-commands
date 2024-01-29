@@ -38,3 +38,10 @@ npm publish
 #
 npm install commander
 
+# Ejecutar mis pruebas
+rm -rf pruebas && mkdir pruebas && cd pruebas
+npx ts-node ../src/index.ts express-api init
+
+
+rm -rf ./*
+npx ts-node ../src/index.ts express-api init
