@@ -128,7 +128,7 @@ enum DIRS {
 const DEPENDENCIES_VITE_INIT =
     "npm i && npm i -D @types/node && npm i -D tailwindcss postcss autoprefixer && npx tailwindcss init -p && npm add -D sass && rm -rf src/App.css src/index.css",
   DEPENDENCIES_EXPRESS_API =
-    "npm i express express-validator bcryptjs cors date-fns dotenv jsonwebtoken mongoose && npm i -D typescript ts-node nodemon @types/express @types/bcryptjs @types/cors @types/dotenv @types/jsonwebtoken @types/mongoose";
+    "npm init --yes && npm i express express-validator bcryptjs cors date-fns dotenv jsonwebtoken mongoose && npm i -D typescript ts-node nodemon @types/express @types/bcryptjs @types/cors @types/jsonwebtoken";
 
 yargs
   .command(
@@ -194,7 +194,7 @@ yargs
       const currentDirectory = process.cwd();
       // DEPENDENCIES_EXPRESS_API
       exec(
-        "npm init --yes",
+        DEPENDENCIES_EXPRESS_API,
         { cwd: currentDirectory },
         (error, stdout, stderr) => {
           if (error) {
@@ -209,11 +209,11 @@ yargs
           console.clear();
           console.log("\nDEPENDENCIES");
           console.log(
-            `- express\n- express-validator\n- bcryptjs\n- cors\n- date-fns\n- dotenv\n- jsonwebtoken\n- mongoose`
+            `express | express-validator | bcryptjs | cors | date-fns | dotenv | jsonwebtoken | mongoose`
           );
           console.log("\nDEVDEPENDENCIES");
           console.log(
-            `- typescript\n- ts-node\n- nodemon\n- @types/express\n- @types/bcryptjs\n- @types/cors\n- @types/dotenv\n- @types/jsonwebtoken\n- @types/mongoose`
+            `typescript | ts-node | nodemon | @types/express | @types/bcryptjs | @types/cors | @types/jsonwebtoken`
           );
           console.log("\n✅ `express-api` se ha ejecutado correctamente");
         }
