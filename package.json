@@ -1,6 +1,6 @@
 {
   "name": "my-commands-jc",
-  "version": "1.4.9",
+  "version": "1.5.1",
   "description": "Permite crear archivos de programacion mediante comandos",
   "bin": {
     "jc": "dist/index.js"

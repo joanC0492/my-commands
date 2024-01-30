@@ -125,6 +125,11 @@ enum DIRS {
   expressApi = "express-api",
 }
 
+const DEPENDENCIES_VITE_INIT =
+    "npm i && npm i -D @types/node && npm i -D tailwindcss postcss autoprefixer && npx tailwindcss init -p && npm add -D sass && rm -rf src/App.css src/index.css",
+  DEPENDENCIES_EXPRESS_API =
+    "npm i express express-validator bcryptjs cors date-fns dotenv jsonwebtoken mongoose && npm i -D typescript ts-node nodemon @types/express @types/bcryptjs @types/cors @types/dotenv @types/jsonwebtoken @types/mongoose";
+
 yargs
   .command(
     "g <mycommand> <filename>",
@@ -151,12 +156,12 @@ yargs
     "Creamos el espacio de trabajo para un proyecto react con Vite",
     {},
     () => {
-      initIntervaL("Iniciando proyecto vite con react...");
+      initIntervaL("Iniciando proyecto react con vite...");
 
       // Obtener la ruta actual
       const currentDirectory = process.cwd();
       exec(
-        "npm i && npm i -D @types/node && npm i -D tailwindcss postcss autoprefixer && npx tailwindcss init -p && npm add -D sass && rm -rf src/App.css src/index.css",
+        DEPENDENCIES_VITE_INIT,
         { cwd: currentDirectory },
         (error, stdout, stderr) => {
           if (error) {
@@ -187,8 +192,7 @@ yargs
       initIntervaL("Iniciando proyecto ExpressApi...");
       // Obtener la ruta actual
       const currentDirectory = process.cwd();
-      // "npm i express express-validator bcryptjs cors date-fns dotenv jsonwebtoken mongoose && npm i -D typescript ts-node nodemon @types/express @types/bcryptjs @types/cors @types/dotenv @types/jsonwebtoken @types/mongoose"
-
+      // DEPENDENCIES_EXPRESS_API
       exec(
         "npm init --yes",
         { cwd: currentDirectory },
