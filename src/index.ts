@@ -12,6 +12,7 @@ import {
 
 /*Ubicacion de los templates*/
 const TEMPLATE: string = path.join(__dirname, "templates/static-files");
+const CURRENT_DIR = process.cwd();
 
 /*Mostrar el spinner*/
 const spinner = spinners.dots;
@@ -128,6 +129,8 @@ enum DIRS {
 
 const DEPENDENCIES_VITE_INIT =
     "npm i && npm i -D @types/node && npm i -D tailwindcss postcss autoprefixer && npx tailwindcss init -p && npm add -D sass && rm -rf src/App.css src/index.css",
+  DEPENDENCIES_VITE_INIT_ROUTER =
+    "npm i react-router-dom && rm -rf src/adapters src/data src/domain src/services",
   DEPENDENCIES_EXPRESS_API =
     "npm init --yes && npm i express express-validator bcryptjs cors date-fns dotenv jsonwebtoken mongoose && npm i -D typescript ts-node nodemon @types/express @types/bcryptjs @types/cors @types/jsonwebtoken";
 
@@ -164,47 +167,68 @@ yargs
     },
     (argv) => {
       initIntervaL("Iniciando proyecto react con vite...");
+      let message: string = "\n✅ `vite init` se ha ejecutado correctamente";
 
-      let dependenciesVite: string = DEPENDENCIES_VITE_INIT;
+      const runDependencies = (dependenciesVite: string): Promise<void> => {
+        return new Promise((resolve, reject) => {
+          exec(
+            dependenciesVite,
+            { cwd: CURRENT_DIR },
+            (error, stdout, stderr) => {
+              if (error) {
+                console.error(`Error: ${error.message}`);
+                reject(`Error: ${error.message}`);
+                return;
+              }
+              if (stderr) {
+                console.error(`stderr: ${stderr}`);
+                reject(`stderr: ${stderr}`);
+                return;
+              }
+              resolve();
+            }
+          );
+        });
+      };
 
-      // Si le mandamos el comando router
-      const { router } = argv;
-      const existRouter = router !== undefined && router !== null;
-      if (existRouter)
-        dependenciesVite += ` && npm i react-router-dom && rm -rf src/adapters src/data src/domain src/services`;
+      const addDirsViteInit = (): void => {
+        const { viteTailwind } = DIRS;
+        const sourceFolder = path.join(TEMPLATE, viteTailwind);
+        const targetFolder = process.cwd();
+        copyFolderSync(sourceFolder, targetFolder);
+      };
 
-      // Obtener la ruta actual
-      const currentDirectory = process.cwd();
-      exec(
-        dependenciesVite,
-        { cwd: currentDirectory },
-        (error, stdout, stderr) => {
-          if (error) {
-            console.error(`Error: ${error.message}`);
-            return;
-          }
-          if (stderr) {
-            console.error(`stderr: ${stderr}`);
-            return;
-          }
+      const addDirsViteInitRouter = (): Promise<string> => {
+        return new Promise((resolve) => {
+          const { viteTailwindAddRouter } = DIRS;
+          const sourceFolder = path.join(TEMPLATE, viteTailwindAddRouter);
+          const targetFolder = process.cwd();
+          copyFolderSync(sourceFolder, targetFolder);
+          runDependencies(DEPENDENCIES_VITE_INIT_ROUTER)
+            .then(() => resolve("\n✅ `react-router` agregado correctamente"))
+            .catch(console.log);
+        });
+      };
+
+      const isRouterAvailable = (): boolean => {
+        const { router } = argv;
+        return router !== undefined && router !== null;
+      };
+
+      runDependencies(DEPENDENCIES_VITE_INIT)
+        .then(() => {
+          addDirsViteInit();
+          return !isRouterAvailable() ? "" : addDirsViteInitRouter();
+        })
+        .then((msg) => {
+          message += msg;
+        })
+        .catch(console.log)
+        .finally(() => {
           clearInterval(interval);
           console.clear();
-          console.log("\n✅ `vite init` se ha ejecutado correctamente");
-        }
-      );
-
-      const { viteTailwind, viteTailwindAddRouter } = DIRS;
-      let sourceFolder: string, targetFolder: string;
-      // const sourceFolder = path.join(TEMPLATE, viteTailwind);
-      // const targetFolder = process.cwd();
-      sourceFolder = path.join(TEMPLATE, viteTailwind);
-      targetFolder = process.cwd();
-      copyFolderSync(sourceFolder, targetFolder);
-
-      if (!existRouter) return;
-      sourceFolder = path.join(TEMPLATE, viteTailwindAddRouter);
-      targetFolder = process.cwd();
-      copyFolderSync(sourceFolder, targetFolder);
+          console.log(message);
+        });
     }
   )
   .command(

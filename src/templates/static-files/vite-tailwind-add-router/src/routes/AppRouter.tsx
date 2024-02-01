@@ -5,10 +5,8 @@ export const AppRouter = () => {
   return (
     <Router>
       <Routes>
-        <Route path="/pokemon/*" element={"<FirstAppRouter />"} />
-        <Route path="/rick-morty/*">
-          <Route path="" element={"<SecondAppRouter />"} />
-        </Route>
+        <Route path="/" element={"Pagina de Inicio :)"} />
+        <Route path="/*" element={<Navigate replace to="/" />} />
         <Route path="/auth/*" element={<AuthRouter />} />
       </Routes>
     </Router>
