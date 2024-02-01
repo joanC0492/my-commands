@@ -45,3 +45,8 @@ npx ts-node ../src/index.ts express-api init
 
 rm -rf ./*
 npx ts-node ../src/index.ts express-api init
+
+
+
+rm -rf node_modules src package-lock.json postcss.config.js tailwind.config.js tsconfig.json vite.config.ts
+npx ts-node ../src/index.ts vite init --router

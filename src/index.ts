@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-console.clear();
+// console.clear();
 import spinners from "cli-spinners";
 import fs from "fs";
 import path from "path";
@@ -122,6 +122,7 @@ const generateReactInterface = (DirAndInterface: string): void => {
 /**/
 enum DIRS {
   viteTailwind = "vite-tailwind",
+  viteTailwindAddRouter = "vite-tailwind-add-router",
   expressApi = "express-api",
 }
 
@@ -154,14 +155,28 @@ yargs
   .command(
     "vite init",
     "Creamos el espacio de trabajo para un proyecto react con Vite",
-    {},
-    () => {
+    (yargs) => {
+      yargs.option("router", {
+        alias: "r",
+        describe: "Agregamos plantilla react-router",
+        type: "string",
+      });
+    },
+    (argv) => {
       initIntervaL("Iniciando proyecto react con vite...");
+
+      let dependenciesVite: string = DEPENDENCIES_VITE_INIT;
+
+      // Si le mandamos el comando router
+      const { router } = argv;
+      const existRouter = router !== undefined && router !== null;
+      if (existRouter)
+        dependenciesVite += ` && npm i react-router-dom && rm -rf src/adapters src/data src/domain src/services`;
 
       // Obtener la ruta actual
       const currentDirectory = process.cwd();
       exec(
-        DEPENDENCIES_VITE_INIT,
+        dependenciesVite,
         { cwd: currentDirectory },
         (error, stdout, stderr) => {
           if (error) {
@@ -178,9 +193,17 @@ yargs
         }
       );
 
-      const { viteTailwind } = DIRS;
-      const sourceFolder = path.join(TEMPLATE, viteTailwind);
-      const targetFolder = process.cwd();
+      const { viteTailwind, viteTailwindAddRouter } = DIRS;
+      let sourceFolder: string, targetFolder: string;
+      // const sourceFolder = path.join(TEMPLATE, viteTailwind);
+      // const targetFolder = process.cwd();
+      sourceFolder = path.join(TEMPLATE, viteTailwind);
+      targetFolder = process.cwd();
+      copyFolderSync(sourceFolder, targetFolder);
+
+      if (!existRouter) return;
+      sourceFolder = path.join(TEMPLATE, viteTailwindAddRouter);
+      targetFolder = process.cwd();
       copyFolderSync(sourceFolder, targetFolder);
     }
   )
