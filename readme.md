@@ -1,6 +1,6 @@
 # Installation
 ```bash
-npm i -g my-commands-jc
+npm uninstall -g my-commands-jc && npm i -g my-commands-jc
 ```
 
 npm i yargs
