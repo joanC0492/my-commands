@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // console.clear();
 import spinners from "cli-spinners";
-import fs from "fs";
+import fs, { promises as fsPromises } from "fs";
 import path from "path";
 import yargs, { Argv } from "yargs";
 import { exec } from "child_process";
@@ -14,6 +14,26 @@ import {
 const TEMPLATE: string = path.join(__dirname, "templates/static-files");
 const CURRENT_DIR = process.cwd();
 
+/*COMANDOS NPM*/
+const DEPENDENCIES_VITE_INIT =
+    "npm i && npm i -D @types/node && npm i -D tailwindcss postcss autoprefixer && npx tailwindcss init -p && npm add -D sass && rm -rf src/App.css src/index.css",
+  DEPENDENCIES_VITE_INIT_ROUTER =
+    "npm i react-router-dom && rm -rf src/adapters src/data src/domain src/services",
+  DEPENDENCIES_EXPRESS_API =
+    "npm init --yes && npm i express express-validator bcryptjs cors date-fns dotenv jsonwebtoken mongoose && npm i -D typescript ts-node nodemon @types/express @types/bcryptjs @types/cors @types/jsonwebtoken";
+
+/*CARPETAS STATICAS*/
+enum DIRS {
+  viteTailwind = "vite-tailwind",
+  viteTailwindAddRouter = "vite-tailwind-add-router",
+  viteTailwindPage = "vite-tailwind-page",
+  expressApi = "express-api",
+}
+
+// Capitalizar los strings
+const capitalize = (str: string): string =>
+  str.charAt(0).toUpperCase() + str.slice(1);
+
 /*Mostrar el spinner*/
 const spinner = spinners.dots;
 let interval: NodeJS.Timeout;
@@ -24,6 +44,23 @@ const initIntervaL = (message: string = "Cargando...") => {
       `\r${spinner.frames[(i = ++i % spinner.frames.length)]} ${message}`
     );
   }, spinner.interval);
+};
+
+/* EJECUTAR NPM DEPENDENCIES */
+const runDependencies = (dependencies: string): Promise<void> => {
+  return new Promise((resolve, reject) => {
+    exec(dependencies, { cwd: CURRENT_DIR }, (error, stdout, stderr) => {
+      if (error) {
+        reject(`Error: ${error.message}`);
+        return;
+      }
+      if (stderr) {
+        reject(`stderr: ${stderr}`);
+        return;
+      }
+      resolve();
+    });
+  });
 };
 
 /*Copiar Carpeta con archivos incluidos*/
@@ -42,7 +79,17 @@ const copyFolderSync = (source: string, target: string) => {
   });
 };
 
-/* Ejecutar el comando para abrir el archivo en VSCode */
+/*Crear Carpeta*/
+const createDirectory = (directoryPath: string): Promise<string> => {
+  return new Promise((resolve, reject) => {
+    fs.mkdir(directoryPath, { recursive: true }, (err) => {
+      if (err) reject(`Error creating directory: ${err}`);
+      else resolve(`Directory created successfully at ${directoryPath}`);
+    });
+  });
+};
+
+/* Abrir archivo en VSCode */
 const openVSCode = (filePath: string): void => {
   const command = `code ${filePath}`;
   exec(command, (error) => {
@@ -86,6 +133,7 @@ const generateReactComponent = (DirAndComponent: string): void => {
 
   openVSCode(componentFilePath);
 };
+
 const generateReactInterface = (DirAndInterface: string): void => {
   let interfaceName = DirAndInterface.split("/").reverse()[0];
   let dir = DirAndInterface.replace(interfaceName, "");
@@ -120,24 +168,28 @@ const generateReactInterface = (DirAndInterface: string): void => {
   openVSCode(interfaceFilePath);
 };
 
-/**/
-enum DIRS {
-  viteTailwind = "vite-tailwind",
-  viteTailwindAddRouter = "vite-tailwind-add-router",
-  expressApi = "express-api",
-}
+const generateReactPage = (namePage: string): void => {
+  const dirPage: string = `app/app/${namePage}`;
+  const filePage: string = namePage.split("App")[0];
 
-const DEPENDENCIES_VITE_INIT =
-    "npm i && npm i -D @types/node && npm i -D tailwindcss postcss autoprefixer && npx tailwindcss init -p && npm add -D sass && rm -rf src/App.css src/index.css",
-  DEPENDENCIES_VITE_INIT_ROUTER =
-    "npm i react-router-dom && rm -rf src/adapters src/data src/domain src/services",
-  DEPENDENCIES_EXPRESS_API =
-    "npm init --yes && npm i express express-validator bcryptjs cors date-fns dotenv jsonwebtoken mongoose && npm i -D typescript ts-node nodemon @types/express @types/bcryptjs @types/cors @types/jsonwebtoken";
+  createDirectory(dirPage)
+    .then((res) => {
+      const { viteTailwindPage } = DIRS;
+      const sourceFolder = path.join(TEMPLATE, viteTailwindPage);
+      copyFolderSync(sourceFolder, dirPage);
+      runDependencies(
+        `mv ${dirPage}/adapters/auth.adapter.ts ${dirPage}/adapters/${filePage}.adapter.ts && mv ${dirPage}/domain/auth.domain.ts ${dirPage}/domain/${filePage}.domain.ts && mv ${dirPage}/routes/AuthRouter.tsx ${dirPage}/routes/${capitalize(
+          filePage
+        )}Router.tsx && mv ${dirPage}/services/auth.service.ts ${dirPage}/services/${filePage}.service.ts`
+      );
+    })
+    .catch(console.log);
+};
 
 yargs
   .command(
     "g <mycommand> <filename>",
-    "Genera componente|interface en React",
+    "Genera componente|interface|app en React",
     {},
     (argv) => {
       const { mycommand, filename } = argv as yargs.ArgumentsCamelCase<{
@@ -151,6 +203,11 @@ yargs
       }
       if (mycommand === "i") {
         generateReactInterface(filename);
+        return;
+      }
+
+      if (mycommand === "a") {
+        generateReactPage(filename);
         return;
       }
     }
@@ -194,16 +251,14 @@ yargs
       const addDirsViteInit = (): void => {
         const { viteTailwind } = DIRS;
         const sourceFolder = path.join(TEMPLATE, viteTailwind);
-        const targetFolder = process.cwd();
-        copyFolderSync(sourceFolder, targetFolder);
+        copyFolderSync(sourceFolder, CURRENT_DIR);
       };
 
       const addDirsViteInitRouter = (): Promise<string> => {
         return new Promise((resolve) => {
           const { viteTailwindAddRouter } = DIRS;
           const sourceFolder = path.join(TEMPLATE, viteTailwindAddRouter);
-          const targetFolder = process.cwd();
-          copyFolderSync(sourceFolder, targetFolder);
+          copyFolderSync(sourceFolder, CURRENT_DIR);
           runDependencies(DEPENDENCIES_VITE_INIT_ROUTER)
             .then(() => resolve("\n✅ `react-router` agregado correctamente"))
             .catch(console.log);
