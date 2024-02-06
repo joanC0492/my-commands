@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// console.clear();
+console.clear();
 import spinners from "cli-spinners";
 import fs, { promises as fsPromises } from "fs";
 import path from "path";
@@ -169,7 +169,7 @@ const generateReactInterface = (DirAndInterface: string): void => {
 };
 
 const generateReactPage = (namePage: string): void => {
-  const dirPage: string = `app/app/${namePage}`;
+  const dirPage: string = `src/app/${namePage}`;
   const filePage: string = namePage.split("App")[0];
 
   createDirectory(dirPage)
@@ -184,6 +184,29 @@ const generateReactPage = (namePage: string): void => {
       );
     })
     .catch(console.log);
+};
+
+const updateFilesVite = async (): Promise<void> => {
+  const strFiles = {
+    font: `\t<link rel="preconnect" href="https://fonts.googleapis.com" />\n\t\t<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />\n\t\t<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700;900&display=swap" rel="stylesheet" />\n`,
+  };
+  try {
+    const filePath = path.join(CURRENT_DIR, "index.html");
+    // Leer el contenido del archivo
+    const data = await fsPromises.readFile(filePath, "utf8");
+    // Buscar la etiqueta </head>
+    const headCloseTagIndex = data.indexOf("</head>");
+    if (headCloseTagIndex === -1)
+      throw new Error("No se encontró la etiqueta </head> en el archivo.");
+    // Construir el nuevo contenido del archivo
+    const newData = `${data.slice(0, headCloseTagIndex)}${
+      strFiles.font
+    }${data.slice(headCloseTagIndex)}`;
+    // Escribir el nuevo contenido en el archivo
+    await fsPromises.writeFile(filePath, newData, "utf8");
+  } catch (error) {
+    console.error("Error:", error);
+  }
 };
 
 yargs
@@ -205,9 +228,12 @@ yargs
         generateReactInterface(filename);
         return;
       }
-
       if (mycommand === "a") {
         generateReactPage(filename);
+        return;
+      }
+      if (mycommand === "x") {
+        // modificarIndexHtml().then(() => console.log("Hola mundo :v"));
         return;
       }
     }
@@ -273,11 +299,10 @@ yargs
       runDependencies(DEPENDENCIES_VITE_INIT)
         .then(() => {
           addDirsViteInit();
-          return !isRouterAvailable() ? "" : addDirsViteInitRouter();
+          return updateFilesVite();
         })
-        .then((msg) => {
-          message += msg;
-        })
+        .then(() => (!isRouterAvailable() ? "" : addDirsViteInitRouter()))
+        .then((msg: string) => (message += msg))
         .catch(console.log)
         .finally(() => {
           clearInterval(interval);
