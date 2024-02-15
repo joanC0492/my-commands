@@ -1,6 +1,6 @@
 import { LoginPage } from "@/app/auth/pages";
 
-export enum FirstAppRoutes {
+export enum AuthAppRoutes {
   "LOGIN" = "login",
 }
 
@@ -15,6 +15,6 @@ export const routes: IRoute[] = [
   {
     path: "login",
     component: LoginPage,
-    name: FirstAppRoutes.LOGIN,
+    name: AuthAppRoutes.LOGIN,
   },
 ];

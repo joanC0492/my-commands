@@ -11,7 +11,7 @@ export const AuthRouter: React.FC = () => {
           element={<route.component />}
         />
       ))}
-      <Route path="/*" element={<Navigate replace to="/auth/login" />} />
+      {/* <Route path="/*" element={<Navigate replace to="/auth/login" />} /> */}
     </Routes>
   );
 };

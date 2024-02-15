@@ -100,6 +100,45 @@ const openVSCode = (filePath: string): void => {
   });
 };
 
+/* Actualizar archivos */
+interface UpdateFiles {
+  type: "BEFORE" | "AFTER" | "REPLACE";
+  filePath: string;
+  strSelector: string;
+  strFiles: Array<string>;
+}
+const updateFiles = async ({
+  type,
+  filePath,
+  strSelector,
+  strFiles,
+}: UpdateFiles): Promise<void> => {
+  try {
+    // Leer el contenido del archivo
+    const data = await fsPromises.readFile(filePath, "utf8");
+    // Buscar selector
+    const queryIndex = data.indexOf(strSelector);
+    let queryIndexInitial = queryIndex;
+    let queryIndexLatest = queryIndex;
+    // Se modifica los indices dependiendo del tipo
+    if (type === "AFTER") {
+      queryIndexInitial += strSelector.length;
+      queryIndexLatest += strSelector.length;
+    }
+    if (type === "REPLACE") queryIndexLatest += strSelector.length;
+    // En caso de error
+    if (queryIndex === -1) throw new Error("No se encontró el selector");
+    // Construir el nuevo contenido del archivo
+    const newData = `${data.slice(0, queryIndexInitial)}${strFiles.join(
+      ""
+    )}${data.slice(queryIndexLatest)}`;
+    // Escribir el nuevo contenido en el archivo
+    await fsPromises.writeFile(filePath, newData, "utf8");
+  } catch (error) {
+    console.error("Error:", error);
+  }
+};
+
 /**/
 const generateReactComponent = (DirAndComponent: string): void => {
   let componentName: string = DirAndComponent.split("/").reverse()[0];
@@ -172,41 +211,162 @@ const generateReactPage = (namePage: string): void => {
   const dirPage: string = `src/app/${namePage}`;
   const filePage: string = namePage.split("App")[0];
 
+  let filePath: string;
+  let strSelector: string;
+  let strFiles: string[];
+
   createDirectory(dirPage)
     .then((res) => {
       const { viteTailwindPage } = DIRS;
       const sourceFolder = path.join(TEMPLATE, viteTailwindPage);
       copyFolderSync(sourceFolder, dirPage);
-      runDependencies(
+
+      // Cambiando el nombre de los archivos
+      return runDependencies(
         `mv ${dirPage}/adapters/auth.adapter.ts ${dirPage}/adapters/${filePage}.adapter.ts && mv ${dirPage}/domain/auth.domain.ts ${dirPage}/domain/${filePage}.domain.ts && mv ${dirPage}/routes/AuthRouter.tsx ${dirPage}/routes/${capitalize(
           filePage
         )}Router.tsx && mv ${dirPage}/services/auth.service.ts ${dirPage}/services/${filePage}.service.ts`
       );
     })
+    .then(() => {
+      filePath = `${dirPage}/routes/routes.ts`;
+      strSelector = `import { HomePage } from "@/app/auth/pages";`;
+      strFiles = [`import { HomePage } from "@/app/${namePage}/pages";`];
+      return updateFiles({ type: "REPLACE", filePath, strSelector, strFiles });
+    })
+    .then(() => {
+      filePath = `${dirPage}/routes/routes.ts`;
+      strSelector = `export enum FirstAppRoutes {`;
+      strFiles = [`export enum ${capitalize(filePage)}AppRoutes {`];
+      return updateFiles({ type: "REPLACE", filePath, strSelector, strFiles });
+    })
+    .then(() => {
+      filePath = `${dirPage}/routes/routes.ts`;
+      strSelector = `name: FirstAppRoutes.HOME,`;
+      strFiles = [`name: ${capitalize(filePage)}AppRoutes.HOME,`];
+      return updateFiles({ type: "REPLACE", filePath, strSelector, strFiles });
+    })
+    .then(() => {
+      filePath = `${dirPage}/routes/${capitalize(filePage)}Router.tsx`;
+      strSelector = `export const AuthRouter: React.FC = () => {`;
+      strFiles = [
+        `export const ${capitalize(filePage)}Router: React.FC = () => {`,
+      ];
+      return updateFiles({ type: "REPLACE", filePath, strSelector, strFiles });
+    })
+    .then(() => {
+      filePath = `src/routes/AppRouter.tsx`;
+      strSelector = `</Routes>`;
+      strFiles = [
+        `<Route path="/${filePage}/*" element={<${capitalize(
+          filePage
+        )}Router />} />`,
+      ];
+      return updateFiles({ type: "BEFORE", filePath, strSelector, strFiles });
+    })
+    .then(() => {
+      // from "react-router-dom";
+      filePath = `src/routes/AppRouter.tsx`;
+      strSelector = `from "react-router-dom";`;
+      strFiles = [
+        `import { ${capitalize(
+          filePage
+        )}Router } from "@/app/${dirPage}/routes/${capitalize(
+          filePage
+        )}Router";`,
+      ];
+      updateFiles({ type: "AFTER", filePath, strSelector, strFiles });
+    })
+    .catch(console.log);
+};
+const generateReactAppWithRoute = (namePage: string): void => {
+  const dirPage: string = `src/app/${namePage}`;
+  const filePage: string = namePage.split("App")[0];
+
+  let filePath: string;
+  let strSelector: string;
+  let strFiles: string[];
+
+  createDirectory(dirPage)
+    .then((res) => {
+      const { viteTailwindPage } = DIRS;
+      const sourceFolder = path.join(TEMPLATE, viteTailwindPage);
+      copyFolderSync(sourceFolder, dirPage);
+
+      // Cambiando el nombre de los archivos
+      return runDependencies(
+        `mv ${dirPage}/adapters/auth.adapter.ts ${dirPage}/adapters/${filePage}.adapter.ts && mv ${dirPage}/domain/auth.domain.ts ${dirPage}/domain/${filePage}.domain.ts && mv ${dirPage}/routes/AuthRouter.tsx ${dirPage}/routes/${capitalize(
+          filePage
+        )}Router.tsx && mv ${dirPage}/services/auth.service.ts ${dirPage}/services/${filePage}.service.ts`
+      );
+    })
+    .then(() => {
+      filePath = `${dirPage}/routes/routes.ts`;
+      strSelector = `import { HomePage } from "@/app/auth/pages";`;
+      strFiles = [`import { HomePage } from "@/app/${namePage}/pages";`];
+      return updateFiles({ type: "REPLACE", filePath, strSelector, strFiles });
+    })
+    .then(() => {
+      filePath = `${dirPage}/routes/routes.ts`;
+      strSelector = `export enum FirstAppRoutes {`;
+      strFiles = [`export enum ${capitalize(filePage)}AppRoutes {`];
+      return updateFiles({ type: "REPLACE", filePath, strSelector, strFiles });
+    })
+    .then(() => {
+      filePath = `${dirPage}/routes/routes.ts`;
+      strSelector = `name: FirstAppRoutes.HOME,`;
+      strFiles = [`name: ${capitalize(filePage)}AppRoutes.HOME,`];
+      return updateFiles({ type: "REPLACE", filePath, strSelector, strFiles });
+    })
+    .then(() => {
+      filePath = `${dirPage}/routes/${capitalize(filePage)}Router.tsx`;
+      strSelector = `export const AuthRouter: React.FC = () => {`;
+      strFiles = [
+        `export const ${capitalize(filePage)}Router: React.FC = () => {`,
+      ];
+      return updateFiles({ type: "REPLACE", filePath, strSelector, strFiles });
+    })
+    .then(() => {
+      filePath = `src/routes/AppRouter.tsx`;
+      strSelector = `</Routes>`;
+      strFiles = [
+        `<Route path="/${filePage}/*" element={<${capitalize(
+          filePage
+        )}Router />} />`,
+      ];
+      return updateFiles({ type: "BEFORE", filePath, strSelector, strFiles });
+    })
+    .then(() => {
+      // from "react-router-dom";
+      filePath = `src/routes/AppRouter.tsx`;
+      strSelector = `from "react-router-dom";`;
+      strFiles = [
+        `import { ${capitalize(
+          filePage
+        )}Router } from "@/app/${dirPage}/routes/${capitalize(
+          filePage
+        )}Router";`,
+      ];
+      updateFiles({ type: "AFTER", filePath, strSelector, strFiles });
+    })
     .catch(console.log);
 };
 
 const updateFilesVite = async (): Promise<void> => {
-  const strFiles = {
-    font: `\t<link rel="preconnect" href="https://fonts.googleapis.com" />\n\t\t<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />\n\t\t<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700;900&display=swap" rel="stylesheet" />\n`,
-  };
-  try {
-    const filePath = path.join(CURRENT_DIR, "index.html");
-    // Leer el contenido del archivo
-    const data = await fsPromises.readFile(filePath, "utf8");
-    // Buscar la etiqueta </head>
-    const headCloseTagIndex = data.indexOf("</head>");
-    if (headCloseTagIndex === -1)
-      throw new Error("No se encontró la etiqueta </head> en el archivo.");
-    // Construir el nuevo contenido del archivo
-    const newData = `${data.slice(0, headCloseTagIndex)}${
-      strFiles.font
-    }${data.slice(headCloseTagIndex)}`;
-    // Escribir el nuevo contenido en el archivo
-    await fsPromises.writeFile(filePath, newData, "utf8");
-  } catch (error) {
-    console.error("Error:", error);
-  }
+  // Fonts in index.html
+  const strFiles = [
+    `\t<link rel="preconnect" href="https://fonts.googleapis.com" />\n`,
+    `\t\t<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />\n`,
+    `\t\t<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700;900&display=swap" rel="stylesheet" />\n`,
+  ];
+  const filePath = path.join(CURRENT_DIR, "index.html");
+  const strSelector = "</head>";
+  await updateFiles({
+    type: "BEFORE",
+    filePath,
+    strSelector,
+    strFiles,
+  });
 };
 
 yargs
@@ -229,7 +389,8 @@ yargs
         return;
       }
       if (mycommand === "a") {
-        generateReactPage(filename);
+        // generateReactPage(filename);
+        generateReactAppWithRoute(filename);
         return;
       }
       if (mycommand === "x") {
