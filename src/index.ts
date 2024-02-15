@@ -261,7 +261,7 @@ const generateReactAppWithRoute = (namePage: string): void => {
       strFiles = [
         `<Route path="/${filePage}/*" element={<${capitalize(
           filePage
-        )}Router />} />`,
+        )}Router />} />\n`,
       ];
       return updateFiles({ type: "BEFORE", filePath, strSelector, strFiles });
     })
@@ -331,6 +331,13 @@ const generateReactPageRoute = (nameApp: string, namePage: string): void => {
         updateFiles({ type: "REPLACE", filePath, strSelector, strFiles })
       );
       return Promise.all(updates);
+    })
+    .then(() => {
+      // update title of creating file
+      filePath = `${dirAppPage}/${namePage}.tsx`;
+      strSelector = `DefaultPage`;
+      strFiles = [`${namePage}Page`];
+      return updateFiles({ type: "REPLACE", filePath, strSelector, strFiles });
     })
     .then(() => {
       // update enum routes
