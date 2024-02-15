@@ -1,1 +1,0 @@
-export { useGlobalContext } from "./useGlobalContext";

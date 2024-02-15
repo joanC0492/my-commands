@@ -5,6 +5,6 @@ export const App = () => {
   return (
     <GlobalProvider>
       <AppRouter />
-    <GlobalProvider>
+    </GlobalProvider>
   );
 };

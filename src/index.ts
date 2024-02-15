@@ -270,9 +270,9 @@ const generateReactAppWithRoute = (namePage: string): void => {
       filePath = `src/routes/AppRouter.tsx`;
       strSelector = `from "react-router-dom";`;
       strFiles = [
-        `import { ${capitalize(
+        `\nimport { ${capitalize(
           filePage
-        )}Router } from "@/app/${dirPage}/routes/${capitalize(
+        )}Router } from "@/app/${namePage}/routes/${capitalize(
           filePage
         )}Router";`,
       ];
