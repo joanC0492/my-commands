@@ -26,6 +26,7 @@ const DEPENDENCIES_VITE_INIT =
 enum DIRS {
   viteTailwind = "vite-tailwind",
   viteTailwindAddRouter = "vite-tailwind-add-router",
+  viteTailwindApp = "vite-tailwind-app",
   viteTailwindPage = "vite-tailwind-page",
   expressApi = "express-api",
 }
@@ -207,7 +208,7 @@ const generateReactInterface = (DirAndInterface: string): void => {
   openVSCode(interfaceFilePath);
 };
 
-const generateReactPage = (namePage: string): void => {
+const generateReactAppWithRoute = (namePage: string): void => {
   const dirPage: string = `src/app/${namePage}`;
   const filePage: string = namePage.split("App")[0];
 
@@ -217,8 +218,8 @@ const generateReactPage = (namePage: string): void => {
 
   createDirectory(dirPage)
     .then((res) => {
-      const { viteTailwindPage } = DIRS;
-      const sourceFolder = path.join(TEMPLATE, viteTailwindPage);
+      const { viteTailwindApp } = DIRS;
+      const sourceFolder = path.join(TEMPLATE, viteTailwindApp);
       copyFolderSync(sourceFolder, dirPage);
 
       // Cambiando el nombre de los archivos
@@ -279,77 +280,84 @@ const generateReactPage = (namePage: string): void => {
     })
     .catch(console.log);
 };
-const generateReactAppWithRoute = (namePage: string): void => {
-  const dirPage: string = `src/app/${namePage}`;
-  const filePage: string = namePage.split("App")[0];
+
+const generateReactPageRoute = (nameApp: string, namePage: string): void => {
+  const dirApp: string = `src/app/${nameApp}`;
+  const fileApp: string = nameApp.split("App")[0];
+  const dirAppPage: string = `src/app/${nameApp}/pages/${namePage}`;
 
   let filePath: string;
   let strSelector: string;
   let strFiles: string[];
 
-  createDirectory(dirPage)
+  createDirectory(dirAppPage)
     .then((res) => {
       const { viteTailwindPage } = DIRS;
       const sourceFolder = path.join(TEMPLATE, viteTailwindPage);
-      copyFolderSync(sourceFolder, dirPage);
-
+      copyFolderSync(sourceFolder, dirAppPage);
       // Cambiando el nombre de los archivos
       return runDependencies(
-        `mv ${dirPage}/adapters/auth.adapter.ts ${dirPage}/adapters/${filePage}.adapter.ts && mv ${dirPage}/domain/auth.domain.ts ${dirPage}/domain/${filePage}.domain.ts && mv ${dirPage}/routes/AuthRouter.tsx ${dirPage}/routes/${capitalize(
-          filePage
-        )}Router.tsx && mv ${dirPage}/services/auth.service.ts ${dirPage}/services/${filePage}.service.ts`
+        `mv ${dirAppPage}/Default.tsx ${dirAppPage}/${namePage}.tsx`
       );
     })
     .then(() => {
-      filePath = `${dirPage}/routes/routes.ts`;
-      strSelector = `import { HomePage } from "@/app/auth/pages";`;
-      strFiles = [`import { HomePage } from "@/app/${namePage}/pages";`];
-      return updateFiles({ type: "REPLACE", filePath, strSelector, strFiles });
+      // update creating file
+      const updates: Array<Promise<void>> = [];
+      filePath = `${dirAppPage}/${namePage}.tsx`;
+      strSelector = `export const DefaultPage: () => JSX.Element = () => {`;
+      strFiles = [`export const ${namePage}Page: () => JSX.Element = () => {`];
+      updates.push(
+        updateFiles({ type: "REPLACE", filePath, strSelector, strFiles })
+      );
+      // update index export
+      filePath = `${dirAppPage}/index.ts`;
+      strSelector = `export { DefaultPage } from "./Default";`;
+      strFiles = [`export { ${namePage}Page } from "./${namePage}";`];
+      updates.push(
+        updateFiles({ type: "REPLACE", filePath, strSelector, strFiles })
+      );
+      // update page exports
+      filePath = `${dirApp}/pages/index.ts`;
+      strSelector = `export * from "./Home";`;
+      strFiles = [`\nexport * from "./${namePage}";`];
+      updates.push(
+        updateFiles({ type: "AFTER", filePath, strSelector, strFiles })
+      );
+      // update imports routes
+      filePath = `${dirApp}/routes/routes.ts`;
+      strSelector = `} from "@/app/${nameApp}/pages";`;
+      strFiles = [`,${namePage}Page} from "@/app/${nameApp}/pages";`];
+      updates.push(
+        updateFiles({ type: "REPLACE", filePath, strSelector, strFiles })
+      );
+      return Promise.all(updates);
     })
     .then(() => {
-      filePath = `${dirPage}/routes/routes.ts`;
-      strSelector = `export enum FirstAppRoutes {`;
-      strFiles = [`export enum ${capitalize(filePage)}AppRoutes {`];
-      return updateFiles({ type: "REPLACE", filePath, strSelector, strFiles });
-    })
-    .then(() => {
-      filePath = `${dirPage}/routes/routes.ts`;
-      strSelector = `name: FirstAppRoutes.HOME,`;
-      strFiles = [`name: ${capitalize(filePage)}AppRoutes.HOME,`];
-      return updateFiles({ type: "REPLACE", filePath, strSelector, strFiles });
-    })
-    .then(() => {
-      filePath = `${dirPage}/routes/${capitalize(filePage)}Router.tsx`;
-      strSelector = `export const AuthRouter: React.FC = () => {`;
+      // update enum routes
+      filePath = `${dirApp}/routes/routes.ts`;
+      strSelector = `export enum ${capitalize(fileApp)}AppRoutes {`;
       strFiles = [
-        `export const ${capitalize(filePage)}Router: React.FC = () => {`,
+        `\n"${namePage.toUpperCase()}" = "${namePage.toLowerCase()}",`,
       ];
-      return updateFiles({ type: "REPLACE", filePath, strSelector, strFiles });
+      return updateFiles({ type: "AFTER", filePath, strSelector, strFiles });
     })
     .then(() => {
-      filePath = `src/routes/AppRouter.tsx`;
-      strSelector = `</Routes>`;
+      // update object routes
+      filePath = `${dirApp}/routes/routes.ts`;
+      strSelector = `];`;
       strFiles = [
-        `<Route path="/${filePage}/*" element={<${capitalize(
-          filePage
-        )}Router />} />`,
+        `  {`,
+        `\n    path: "${namePage.toLowerCase()}",`,
+        `\n    component: ${namePage}Page,`,
+        `\n    name: ${capitalize(
+          fileApp
+        )}AppRoutes.${namePage.toUpperCase()},`,
+        `\n  },\n`,
       ];
-      return updateFiles({ type: "BEFORE", filePath, strSelector, strFiles });
+      updateFiles({ type: "BEFORE", filePath, strSelector, strFiles });
     })
-    .then(() => {
-      // from "react-router-dom";
-      filePath = `src/routes/AppRouter.tsx`;
-      strSelector = `from "react-router-dom";`;
-      strFiles = [
-        `import { ${capitalize(
-          filePage
-        )}Router } from "@/app/${dirPage}/routes/${capitalize(
-          filePage
-        )}Router";`,
-      ];
-      updateFiles({ type: "AFTER", filePath, strSelector, strFiles });
-    })
-    .catch(console.log);
+    .catch(console.log)
+    .finally(() => console.log(`Page routed '${namePage}' created...`));
 };
 
 const updateFilesVite = async (): Promise<void> => {
@@ -389,12 +397,12 @@ yargs
         return;
       }
       if (mycommand === "a") {
-        // generateReactPage(filename);
         generateReactAppWithRoute(filename);
         return;
       }
-      if (mycommand === "x") {
-        // modificarIndexHtml().then(() => console.log("Hola mundo :v"));
+      if (mycommand === "ap") {
+        const [nameApp, namePage] = filename.split("/");
+        generateReactPageRoute(nameApp, namePage);
         return;
       }
     }
