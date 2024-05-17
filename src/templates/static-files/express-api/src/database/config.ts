@@ -1,12 +1,16 @@
 import mongoose, { connect } from "mongoose";
-import { config } from "../config/config";
+import { config } from "../config";
 
-export const dbConnection = async (): Promise<void> => {
+export const dbConnection = async (): Promise<string> => {
+  let message: string = "";
   try {
     mongoose.set("strictQuery", false); // Da un error
-    await connect(config.dbConnection!);
+    await connect(config.dbConnection);
+    message += "Conectado a mongo :)";
   } catch (error) {
-    console.log(error);
-    throw new Error("Error al iniciralizar la BD");
+    if (error instanceof Error)
+      message += `Error al inicializar la BD: \`${error.message}\``;
+  } finally {
+    return message;
   }
 };

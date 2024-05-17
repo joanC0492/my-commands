@@ -83,8 +83,10 @@ npm install commander
 
 # Ejecutar mis pruebas
 
+# Ejecutando una prueba en la carpeta pruebas EXPRESS API
 rm -rf pruebas && mkdir pruebas && cd pruebas
 npx ts-node ../src/index.ts express-api init
+
 
 rm -rf ./\*
 npx ts-node ../src/index.ts express-api init

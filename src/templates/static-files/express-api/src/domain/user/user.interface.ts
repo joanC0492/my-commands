@@ -1,5 +1,6 @@
-export interface Iuser {
+export interface User {
   name: string;
   email: string;
   password: string;
+  state: boolean;
 }

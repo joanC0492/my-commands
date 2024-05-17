@@ -20,7 +20,7 @@ const DEPENDENCIES_VITE_INIT =
   DEPENDENCIES_VITE_INIT_ROUTER =
     "npm i react-router-dom && rm -rf src/adapters src/data src/domain src/services",
   DEPENDENCIES_EXPRESS_API =
-    "npm init --yes && npm i express express-validator bcryptjs cors date-fns dotenv jsonwebtoken mongoose && npm i -D typescript ts-node nodemon @types/express @types/bcryptjs @types/cors @types/jsonwebtoken";
+    "npm init --yes && npm i express express-validator bcryptjs cors date-fns dotenv jsonwebtoken mongoose morgan && npm i -D typescript ts-node nodemon @types/express @types/bcryptjs @types/cors @types/jsonwebtoken @types/morgan";
 
 /*CARPETAS STATICAS*/
 enum DIRS {
@@ -384,6 +384,24 @@ const updateFilesVite = async (): Promise<void> => {
   });
 };
 
+const updateFilePackageJson = async (): Promise<void> => {
+  // Fonts in index.html
+  const strFiles = [
+    `,\n`,
+    `    "dev": "nodemon src/index.ts",\n`,
+    `    "build": "tsc",\n`,
+    `    "start": "node ./dist/index.js"`,
+  ];
+  const filePath = path.join(CURRENT_DIR, "package.json");
+  const strSelector = `&& exit 1"`;
+  await updateFiles({
+    type: "AFTER",
+    filePath,
+    strSelector,
+    strFiles,
+  });
+};
+
 yargs
   .command(
     "g <mycommand> <filename>",
@@ -508,17 +526,31 @@ yargs
             console.error(`stderr: ${stderr}`);
             return;
           }
-          clearInterval(interval);
-          console.clear();
-          console.log("\nDEPENDENCIES");
-          console.log(
-            `express | express-validator | bcryptjs | cors | date-fns | dotenv | jsonwebtoken | mongoose`
-          );
-          console.log("\nDEVDEPENDENCIES");
-          console.log(
-            `typescript | ts-node | nodemon | @types/express | @types/bcryptjs | @types/cors | @types/jsonwebtoken`
-          );
-          console.log("\n✅ `express-api` se ha ejecutado correctamente");
+
+          updateFilePackageJson().then(() => {
+            clearInterval(interval);
+            console.clear();
+            console.log("\nDEPENDENCIES");
+            console.log(
+              `express express-validator bcryptjs cors date-fns dotenv jsonwebtoken mongoose morgan`
+            );
+            console.log("\nDEVDEPENDENCIES");
+            console.log(
+              `typescript ts-node nodemon @types/express @types/bcryptjs @types/cors @types/jsonwebtoken @types/morgan`
+            );
+            console.log("\n✅ `express-api` se ha ejecutado correctamente");
+          });
+          // clearInterval(interval);
+          // console.clear();
+          // console.log("\nDEPENDENCIES");
+          // console.log(
+          //   `express express-validator bcryptjs cors date-fns dotenv jsonwebtoken mongoose morgan`
+          // );
+          // console.log("\nDEVDEPENDENCIES");
+          // console.log(
+          //   `typescript ts-node nodemon @types/express @types/bcryptjs @types/cors @types/jsonwebtoken @types/morgan`
+          // );
+          // console.log("\n✅ `express-api` se ha ejecutado correctamente");
         }
       );
 
